@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ShopManager — Supermarket Products</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --red: #E01E2A;
+      --red-dark: #B01520;
+      --black: #0D0D0D;
+      --dark: #1A1A1A;
+      --card: #212121;
+      --border: #2E2E2E;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--black);
+      color: #F0F0F0;
+      min-height: 100vh;
+    }
+    h1, h2, .bebas { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; }
+
+    /* NAV */
+    nav {
+      background: var(--dark);
+      border-bottom: 2px solid var(--red);
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 0.1em; color: #fff; }
+    .nav-logo span { color: var(--red); }
+    .nav-badge {
+      background: var(--red);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 2px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* TOAST */
+    #toast {
+      position: fixed;
+      top: 80px;
+      right: 24px;
+      z-index: 999;
+      padding: 12px 20px;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+      pointer-events: none;
+      max-width: 300px;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.success { background: #166534; border-left: 4px solid #22c55e; color: #dcfce7; }
+    #toast.error { background: #7f1d1d; border-left: 4px solid var(--red); color: #fee2e2; }
+
+    /* FORM PANEL */
+    .form-panel {
+      background: var(--dark);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--red);
+      border-radius: 4px;
+      padding: 1.5rem;
+    }
+    .form-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.08em;
+      color: #fff;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .form-title .dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; }
+
+    input, select, textarea {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: #F0F0F0;
+      padding: 10px 14px;
+      border-radius: 3px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--red); }
+    input[type="file"] { cursor: pointer; }
+    label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 4px; display: block; }
+    select option { background: var(--card); }
+
+    /* BUTTONS */
+    .btn-primary {
+      background: var(--red);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      width: 100%;
+    }
+    .btn-primary:hover { background: var(--red-dark); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-secondary {
+      background: transparent;
+      color: #888;
+      border: 1px solid var(--border);
+      padding: 10px 20px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    .btn-secondary:hover { border-color: #888; color: #F0F0F0; }
+
+    /* PRODUCT CARDS */
+    .product-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+      animation: fadeIn 0.3s ease forwards;
+    }
+    .product-card:hover { transform: translateY(-3px); border-color: #444; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .card-img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      background: #2a2a2a;
+      display: block;
+    }
+    .card-img-placeholder {
+      width: 100%;
+      height: 160px;
+      background: #2a2a2a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #444;
+      font-size: 2rem;
+    }
+    .card-body { padding: 1rem; }
+    .card-category {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--red);
+      margin-bottom: 4px;
+    }
+    .card-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.15rem;
+      letter-spacing: 0.05em;
+      color: #fff;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-price {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .card-price span { font-size: 0.75rem; color: #888; font-weight: 400; }
+    .badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 3px 8px;
+      border-radius: 2px;
+    }
+    .badge-in { background: #14532d; color: #86efac; }
+    .badge-out { background: #450a0a; color: #fca5a5; }
+    .card-footer {
+      display: flex;
+      gap: 8px;
+      padding: 0.75rem 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .btn-edit {
+      flex: 1;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: #ccc;
+      padding: 7px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-edit:hover { border-color: #888; color: #fff; }
+    .btn-delete {
+      flex: 1;
+      background: transparent;
+      border: 1px solid #3f1010;
+      color: #f87171;
+      padding: 7px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-delete:hover { background: #450a0a; border-color: var(--red); }
+
+    /* SEARCH & FILTER */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .filter-bar input, .filter-bar select { width: auto; flex: 1; min-width: 150px; }
+
+    /* SECTION TITLE */
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      letter-spacing: 0.08em;
+      color: #fff;
+    }
+    .section-title span { color: var(--red); }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #444;
+    }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-state p { font-size: 0.9rem; }
+
+    /* LOADING */
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--red);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 4rem auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* MODAL CONFIRM */
+    #confirm-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    #confirm-modal.open { display: flex; }
+    .modal-box {
+      background: var(--dark);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--red);
+      border-radius: 4px;
+      padding: 2rem;
+      max-width: 380px;
+      width: 90%;
+    }
+    .modal-box h3 { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .modal-box p { font-size: 0.875rem; color: #888; margin-bottom: 1.5rem; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Shop<span>Manager</span></div>
+  <div class="nav-badge">Products CRUD</div>
+</nav>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- CONFIRM MODAL -->
+<div id="confirm-modal">
+  <div class="modal-box">
+    <h3>Delete Product?</h3>
+    <p>This action cannot be undone. The product and its image will be permanently removed.</p>
+    <div style="display:flex;gap:10px;">
+      <button class="btn-secondary" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-primary" id="confirm-delete-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div style="max-width:1400px;margin:0 auto;padding:2rem 1.5rem;">
+  <div style="display:grid;grid-template-columns:340px 1fr;gap:2rem;align-items:start;">
+
+    <!-- LEFT: FORM -->
+    <div style="position:sticky;top:80px;">
+      <div class="form-panel">
+        <div class="form-title"><div class="dot"></div><span id="form-title-text">Add New Product</span></div>
+        <input type="hidden" id="edit-id"/>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div>
+            <label>Product Name *</label>
+            <input type="text" id="f-name" placeholder="e.g. Coca Cola 500ml"/>
+          </div>
+          <div>
+            <label>Category *</label>
+            <select id="f-category">
+              <option value="">Select category</option>
+              <option>Beverages</option>
+              <option>Dairy</option>
+              <option>Snacks</option>
+              <option>Bakery</option>
+              <option>Fruits & Vegetables</option>
+              <option>Meat & Fish</option>
+              <option>Household</option>
+              <option>Personal Care</option>
+            </select>
+          </div>
+          <div>
+            <label>Price (RWF) *</label>
+            <input type="number" id="f-price" placeholder="e.g. 500" min="0"/>
+          </div>
+          <div>
+            <label>Stock Quantity</label>
+            <input type="number" id="f-stock" placeholder="e.g. 30" min="0"/>
+          </div>
+          <div>
+            <label>Description</label>
+            <textarea id="f-description" rows="2" placeholder="Short product description..." style="resize:none;"></textarea>
+          </div>
+          <div>
+            <label>Product Image</label>
+            <input type="file" id="f-image" accept="image/*"/>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+            <button class="btn-primary" onclick="submitForm()">
+              <span id="submit-btn-text">ADD PRODUCT</span>
+            </button>
+            <button class="btn-secondary" id="cancel-btn" onclick="resetForm()" style="display:none;">CANCEL EDIT</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: PRODUCTS -->
+    <div>
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <div class="section-title">All <span>Products</span></div>
+          <div style="font-size:0.8rem;color:#666;" id="product-count">Loading...</div>
+        </div>
+        <div class="filter-bar">
+          <input type="text" id="search-input" placeholder="Search products..." oninput="filterProducts()" style="min-width:180px;"/>
+          <select id="filter-category" onchange="filterProducts()">
+            <option value="">All Categories</option>
+            <option>Beverages</option>
+            <option>Dairy</option>
+            <option>Snacks</option>
+            <option>Bakery</option>
+            <option>Fruits & Vegetables</option>
+            <option>Meat & Fish</option>
+            <option>Household</option>
+            <option>Personal Care</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Grid -->
+      <div id="products-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.25rem;">
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:4000/api/products';
+  let allProducts = [];
+  let deleteTargetId = null;
+
+  // ── TOAST ──────────────────────────────────────────────
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `show ${type}`;
+    setTimeout(() => { t.className = ''; }, 3000);
+  }
+
+  // ── LOAD PRODUCTS ──────────────────────────────────────
+  async function loadProducts() {
+    try {
+      const res = await fetch(API);
+      allProducts = await res.json();
+      renderProducts(allProducts);
+    } catch (err) {
+      document.getElementById('products-grid').innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="icon">⚠️</div>
+          <p>Could not connect to API. Make sure your server is running.</p>
+        </div>`;
+      document.getElementById('product-count').textContent = 'Connection failed';
+    }
+  }
+
+  // ── RENDER ─────────────────────────────────────────────
+  function renderProducts(products) {
+    const grid = document.getElementById('products-grid');
+    const count = document.getElementById('product-count');
+    count.textContent = `${products.length} product${products.length !== 1 ? 's' : ''} found`;
+
+    if (products.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="icon">📦</div>
+          <p>No products found. Add one using the form!</p>
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = products.map(p => `
+      <div class="product-card">
+        ${p.image
+          ? `<img class="card-img" src="http://localhost:4000/${p.image}" alt="${p.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+             <div class="card-img-placeholder" style="display:none;">📷</div>`
+          : `<div class="card-img-placeholder">📷</div>`}
+        <div class="card-body">
+          <div class="card-category">${p.category}</div>
+          <div class="card-name" title="${p.name}">${p.name}</div>
+          <div class="card-price">${Number(p.price).toLocaleString()} <span>RWF</span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span class="${p.stock > 0 ? 'badge badge-in' : 'badge badge-out'}">
+              ${p.stock > 0 ? `In Stock (${p.stock})` : 'Out of Stock'}
+            </span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn-edit" onclick="editProduct('${p._id}')">✏ Edit</button>
+          <button class="btn-delete" onclick="confirmDelete('${p._id}')">✕ Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── FILTER ─────────────────────────────────────────────
+  function filterProducts() {
+    const search = document.getElementById('search-input').value.toLowerCase();
+    const cat = document.getElementById('filter-category').value;
+    const filtered = allProducts.filter(p => {
+      const matchSearch = p.name.toLowerCase().includes(search) || p.category.toLowerCase().includes(search);
+      const matchCat = cat ? p.category === cat : true;
+      return matchSearch && matchCat;
+    });
+    renderProducts(filtered);
+  }
+
+  // ── CREATE PRODUCT ─────────────────────────────────────
+  async function createProduct(formData) {
+    const res = await fetch(API, { method: 'POST', body: formData });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Failed to create product');
+    showToast('Product added successfully!', 'success');
+    await loadProducts();
+  }
+
+  // ── UPDATE PRODUCT ─────────────────────────────────────
+  async function updateProduct(id, formData) {
+    const res = await fetch(`${API}/${id}`, { method: 'PUT', body: formData });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Failed to update product');
+    showToast('Product updated successfully!', 'success');
+    await loadProducts();
+  }
+
+  // ── DELETE PRODUCT ─────────────────────────────────────
+  async function deleteProduct(id) {
+    const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Failed to delete product');
+    showToast('Product deleted!', 'success');
+    await loadProducts();
+  }
+
+  // ── SUBMIT FORM ────────────────────────────────────────
+  async function submitForm() {
+    const name = document.getElementById('f-name').value.trim();
+    const category = document.getElementById('f-category').value;
+    const price = document.getElementById('f-price').value;
+    const stock = document.getElementById('f-stock').value;
+    const description = document.getElementById('f-description').value.trim();
+    const imageFile = document.getElementById('f-image').files[0];
+    const editId = document.getElementById('edit-id').value;
+
+    if (!name || !category || !price) {
+      showToast('Name, category and price are required!', 'error');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('category', category);
+    formData.append('price', price);
+    formData.append('stock', stock || 0);
+    formData.append('description', description);
+    if (imageFile) formData.append('image', imageFile);
+
+    try {
+      if (editId) {
+        await updateProduct(editId, formData);
+      } else {
+        await createProduct(formData);
+      }
+      resetForm();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  // ── EDIT ───────────────────────────────────────────────
+  function editProduct(id) {
+    const p = allProducts.find(x => x._id === id);
+    if (!p) return;
+    document.getElementById('edit-id').value = p._id;
+    document.getElementById('f-name').value = p.name;
+    document.getElementById('f-category').value = p.category;
+    document.getElementById('f-price').value = p.price;
+    document.getElementById('f-stock').value = p.stock;
+    document.getElementById('f-description').value = p.description || '';
+    document.getElementById('form-title-text').textContent = 'Edit Product';
+    document.getElementById('submit-btn-text').textContent = 'SAVE CHANGES';
+    document.getElementById('cancel-btn').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── RESET FORM ─────────────────────────────────────────
+  function resetForm() {
+    document.getElementById('edit-id').value = '';
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-category').value = '';
+    document.getElementById('f-price').value = '';
+    document.getElementById('f-stock').value = '';
+    document.getElementById('f-description').value = '';
+    document.getElementById('f-image').value = '';
+    document.getElementById('form-title-text').textContent = 'Add New Product';
+    document.getElementById('submit-btn-text').textContent = 'ADD PRODUCT';
+    document.getElementById('cancel-btn').style.display = 'none';
+  }
+
+  // ── CONFIRM DELETE ─────────────────────────────────────
+  function confirmDelete(id) {
+    deleteTargetId = id;
+    document.getElementById('confirm-modal').classList.add('open');
+    document.getElementById('confirm-delete-btn').onclick = async () => {
+      closeConfirm();
+      try {
+        await deleteProduct(deleteTargetId);
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    };
+  }
+
+  function closeConfirm() {
+    document.getElementById('confirm-modal').classList.remove('open');
+    deleteTargetId = null;
+  }
+
+  // ── INIT ───────────────────────────────────────────────
+  loadProducts();
+</script>
+</body>
+</html>
